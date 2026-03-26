@@ -16,26 +16,26 @@ from obswebsocket import obsws, requests # type: ignore
 sys.path.append(os.path.expanduser("~/Secrets"))
 from obs_ws_conn_info import host as ws_host, port as ws_port, password as ws_password # type: ignore
 
-# Upper-level directories
+# Set to True if you want to include stream key in the export (service.json)
+INCLUDE_SENSITIVE = False
+# Storage for advanced-scene-switcher config file path
+ADVSS_SETTINGS_FILE = "" # <--- global variable
+
+# Upper-level paths
 # Directory where all OBS backups are stored
 EXPORT_PATH_PREFIX = "D:/Users/error/OneDrive/Documents/config-backups_local/OBS/Backups"
 # Directory where OBS plugin config files are stored
 PLUGIN_PATH_PREFIX = "C:/Users/error/AppData/Roaming/obs-studio/plugin_config"
-# Set to True if you want to include stream key in the export (service.json)
-INCLUDE_SENSITIVE = False 
 
 # Sub-dir path building
-# Directory to export profile data - adjust as needed
+# Directory to export profile data
 PROFILE_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Profile Backups")
-# Directory to export Advanced Scene Switcher config - adjust as needed
-ADVSS_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Plugin Settings Backup/Advanced Scene Switcher")
-# Directory to export scene collection data - adjust as needed
+# Directory to export scene collection data
 SCENE_COLLECTION_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Scene Collection Backups")
-# Directory where OBS plugin config files are stored
-
+# Directory to export Advanced Scene Switcher config
+ADVSS_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Plugin Settings Backup/Advanced Scene Switcher")
+# Directory where advanced-scene-switcher plugin config files are stored
 ADVSS_PLUGIN_CONFIG_DIR = (f"{PLUGIN_PATH_PREFIX}/advanced-scene-switcher")
-
-ADVSS_SETTINGS_FILE = "" # <--- global variable
 
 # Function to get current date and time as a string
 def get_date_time_string() -> str:
