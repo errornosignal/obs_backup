@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # script to export OBS profile and scene collection with assets
 
-import os
-import sys
-import re
 import json
-import zipfile
+import os
+import re
 import shutil
-from pathlib import Path
-from typing import Set
+import sys
+import zipfile
 from datetime import datetime
 from obswebsocket import obsws, requests # type: ignore
+from pathlib import Path
+from typing import Set
 
 # import websocket connection properties from file in '~/Secrets' dir
 sys.path.append(os.path.expanduser("~/Secrets"))
