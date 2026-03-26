@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # script to export OBS profile and scene collection with assets
 
+import hashlib
 import json
 import os
 import re
@@ -37,6 +38,73 @@ PLUGIN_PATH_PREFIX = os.path.expanduser("~/AppData/Roaming/obs-studio/plugin_con
 # Directory where advanced-scene-switcher plugin config files are stored
 ADVSS_PLUGIN_CONFIG_DIR = os.path.join(PLUGIN_PATH_PREFIX, "advanced-scene-switcher")
 
+# Funtion to compute the hash of a file
+def compute_file_hash(file_path, chunk_size=65536, algorithm='sha256') -> str:
+    """
+    Compute SHA-256 hash of a file in chunks to handle large files efficiently.
+    Returns the hex digest string or None if the file can't be read.
+    """
+    sha256 = hashlib.sha256()
+    try:
+        with open(file_path, "rb") as f:
+            while chunk := f.read(chunk_size):
+                sha256.update(chunk)
+    except (OSError, PermissionError) as e:
+        print(f"[ERROR] Cannot read file: {file_path} ({e})")
+        return None
+    return sha256.hexdigest()
+
+# Function to remove files with duplicate hashes in a directory
+def de_dup(directory, dry_run=False, print_summary=False) -> None:
+    """
+    Scan the directory recursively, compute hashes, and remove duplicate files.
+    Keeps the first occurrence of each unique file.
+    
+    :param directory: Path to the directory to scan.
+    :param dry_run: If True, only list duplicates without deleting them.
+    :print_summary: If True, print final statistics
+    """
+    if not os.path.isdir(directory):
+        print(f"[ERROR] '{directory}' is not a valid directory.")
+        return
+    
+    seen_hashes = {}
+    duplicates = []
+
+    for root, _, files in os.walk(directory):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+
+            # Skip symbolic links to avoid infinite loops
+            if os.path.islink(file_path):
+                continue
+
+            file_hash = compute_file_hash(file_path)
+            if file_hash is None:
+                continue  # Skip unreadable files
+
+            if file_hash in seen_hashes:
+                duplicates.append(file_path)
+                if not dry_run:
+                    try:
+                        os.remove(file_path)
+                        print(f"[REMOVED] Duplicate: {file_path}")
+                    except (OSError, PermissionError) as e:
+                        print(f"[ERROR] Cannot delete file: {file_path} ({e})")
+                else:
+                    print(f"[DUPLICATE] {file_path}")
+            else:
+                seen_hashes[file_hash] = file_path
+    if print_summary:
+        print("\nde_dup() Summary:")
+        print(f"Total duplicates found: {len(duplicates)}")
+        if dry_run:
+            print("No files were deleted (dry-run mode).")
+        else:
+            print(f"Total duplicates removed: {len(duplicates)}")
+    
+    return
+    
 # Function to get current date and time as a string
 def get_date_time_string() -> str:
     """Return a string with the current date and time in the format YYYY.MM.DD.HH.MM.SS."""
@@ -45,6 +113,7 @@ def get_date_time_string() -> str:
 
 # Function to get current profile and scene collection from OBS via WebSocket
 def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
+    """ """
     try:
         # Connect to OBS WebSocket
         ws = obsws(ws_host, ws_port, ws_password)
@@ -254,7 +323,8 @@ def export_advss_config(scene_collection) -> None:
     shutil.copy2(source_file, destination_file)
 
     print(f"[INFO] ✅ ADVSS settings exported to: '{destination_file}'")
-    return
+    
+    return destination_folder, new_file_name
 
 # Function to return the most recent Advanced Scene Switcher config file path from the plugin config directory, matching the current scene collection name  
 def get_advss_most_recent_settings_file() -> str:
@@ -343,7 +413,10 @@ if __name__ == "__main__":
     recent_advsss_settings_file = get_advss_most_recent_settings_file()
     
     # Not a true export, just copies the plugin config JSON to the backups folder
-    export_advss_config(scene_collection)
+    d_dir, d_file= export_advss_config(scene_collection)
+    
+    #cleanup duplicate advanced-scene-switcher exports
+    de_dup(d_dir)
     
     # Update OBS Scene file config with the path to the most recent Advanced Scene Switcher export 
     update_obs_config(find_scene_file(scene_collection), recent_advsss_settings_file) 
