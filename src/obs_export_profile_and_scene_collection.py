@@ -11,24 +11,31 @@ from pathlib import Path
 from typing import Set
 from datetime import datetime
 from obswebsocket import obsws, requests # type: ignore
-import obs_ws_pass # Separate file to store OBS WebSocket password for security - create obs_ws_pass.py with a variable named 'password' containing your OBS WebSocket password
 
-host = "localhost" # Change to your OBS IP address if not running on the same machine
-port = 4455 # Default for OBS 28+
-password = obs_ws_pass.password  # import from obs_ws_pass.py
-INCLUDE_SENSITIVE = False # Set to True if you want to include stream key in the export (service.json)
+# import websocket connection properties from file in '~/Secrets' dir
+sys.path.append(os.path.expanduser("~/Secrets"))
+from obs_ws_conn_info import host as ws_host, port as ws_port, password as ws_password # type: ignore
 
-path_prefix = "D:/Users/error/OneDrive/Documents/config-backups_local/OBS/Backups"
+# Upper-level directories
+# Directory where all OBS backups are stored
+EXPORT_PATH_PREFIX = "D:/Users/error/OneDrive/Documents/config-backups_local/OBS/Backups"
+# Directory where OBS plugin config files are stored
+PLUGIN_PATH_PREFIX = "C:/Users/error/AppData/Roaming/obs-studio/plugin_config"
+# Set to True if you want to include stream key in the export (service.json)
+INCLUDE_SENSITIVE = False 
+
+# Sub-dir path building
 # Directory to export profile data - adjust as needed
-PROFILE_EXPORT_PATH = (f"{path_prefix}/Profile Backups")
+PROFILE_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Profile Backups")
 # Directory to export Advanced Scene Switcher config - adjust as needed
-ADVSS_EXPORT_PATH = (f"{path_prefix}/Plugin Settings Backup/Advanced Scene Switcher")
+ADVSS_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Plugin Settings Backup/Advanced Scene Switcher")
 # Directory to export scene collection data - adjust as needed
-SCENE_COLLECTION_EXPORT_PATH = (f"{path_prefix}/Scene Collection Backups")
+SCENE_COLLECTION_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Scene Collection Backups")
+# Directory where OBS plugin config files are stored
 
-OBS_PLUGIN_CONFIG_PATH = "C:/Users/error/AppData/Roaming/obs-studio/plugin_config"
-ADVSS_PLUGIN_CONFIG_DIR = (f"{OBS_PLUGIN_CONFIG_PATH}/advanced-scene-switcher")
-ADVSS_SETTINGS_FILE = ""
+ADVSS_PLUGIN_CONFIG_DIR = (f"{PLUGIN_PATH_PREFIX}/advanced-scene-switcher")
+
+ADVSS_SETTINGS_FILE = "" # <--- global variable
 
 # Function to get current date and time as a string
 def get_date_time_string() -> str:
@@ -40,7 +47,7 @@ def get_date_time_string() -> str:
 def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
     try:
         # Connect to OBS WebSocket
-        ws = obsws(host, port, password)
+        ws = obsws(ws_host, ws_port, ws_password)
         ws.connect()
         print("[INFO] Connected to OBS WebSocket.")
 
