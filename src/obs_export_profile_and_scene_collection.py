@@ -21,21 +21,21 @@ INCLUDE_SENSITIVE = False
 # Storage for advanced-scene-switcher config file path
 ADVSS_SETTINGS_FILE = "" # <--- global variable
 
-# Upper-level paths
-# Directory where all OBS backups are stored
+# Upper-level directory where all my OBS backups sub-dirs are stored - adjust as needed
 EXPORT_PATH_PREFIX = "D:/Users/error/OneDrive/Documents/config-backups_local/OBS/Backups"
-# Directory where OBS plugin config files are stored
-PLUGIN_PATH_PREFIX = "C:/Users/error/AppData/Roaming/obs-studio/plugin_config"
 
 # Sub-dir path building
 # Directory to export profile data
-PROFILE_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Profile Backups")
+PROFILE_EXPORT_PATH = os.path.join(EXPORT_PATH_PREFIX, "Profile_Backups")
 # Directory to export scene collection data
-SCENE_COLLECTION_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Scene Collection Backups")
+SCENE_COLLECTION_EXPORT_PATH = os.path.join(EXPORT_PATH_PREFIX, "Scene_Collection_Backups")
 # Directory to export Advanced Scene Switcher config
-ADVSS_EXPORT_PATH = (f"{EXPORT_PATH_PREFIX}/Plugin Settings Backup/Advanced Scene Switcher")
+ADVSS_EXPORT_PATH = os.path.join(EXPORT_PATH_PREFIX, "Plugin_Settings_Backup/Advanced_Scene_Switcher")
+
+# Directory where OBS plugin config files are stored
+PLUGIN_PATH_PREFIX = os.path.expanduser("~/AppData/Roaming/obs-studio/plugin_config")
 # Directory where advanced-scene-switcher plugin config files are stored
-ADVSS_PLUGIN_CONFIG_DIR = (f"{PLUGIN_PATH_PREFIX}/advanced-scene-switcher")
+ADVSS_PLUGIN_CONFIG_DIR = os.path.join(PLUGIN_PATH_PREFIX, "advanced-scene-switcher")
 
 # Function to get current date and time as a string
 def get_date_time_string() -> str:
@@ -257,7 +257,7 @@ def export_advss_config(scene_collection) -> None:
     return
 
 # Function to return the most recent Advanced Scene Switcher config file path from the plugin config directory, matching the current scene collection name  
-def get_advss_most_recent_settings_file(scene_collection) -> str:
+def get_advss_most_recent_settings_file() -> str:
     """Get the most recent Advanced Scene Switcher config file path from the plugin config directory, matching the current active scene collection name."""
     # Define the OBS plugin config directory for Advanced Scene Switcher - adjust as needed
     advss_plugin_config_dir = ADVSS_PLUGIN_CONFIG_DIR
@@ -337,12 +337,12 @@ if __name__ == "__main__":
     current_profile, scene_collection = obs_websocket_get_current_profile_and_scene_collection()
     # Export profile if found, otherwise skip
     if current_profile:
-        export_obs_profile(current_profile, f"{PROFILE_EXPORT_PATH}/{current_profile}.zip", INCLUDE_SENSITIVE)
+        export_obs_profile(current_profile, (os.path.join(PROFILE_EXPORT_PATH, f"{current_profile}.zip")), INCLUDE_SENSITIVE)
 
-    #   
-    recent_advsss_settings_file = get_advss_most_recent_settings_file(scene_collection)
+    # Get most recent advanced-scene-switcher settings file
+    recent_advsss_settings_file = get_advss_most_recent_settings_file()
     
-    #   
+    # Not a true export, just copies the plugin config JSON to the backups folder
     export_advss_config(scene_collection)
     
     # Update OBS Scene file config with the path to the most recent Advanced Scene Switcher export 
@@ -350,7 +350,7 @@ if __name__ == "__main__":
     
     # Export scene collection with assets if found, otherwise skip
     if scene_collection:
-        export_scene_collection(scene_collection, f"{SCENE_COLLECTION_EXPORT_PATH}/{scene_collection}.zip")
+        export_scene_collection(scene_collection, os.path.join(SCENE_COLLECTION_EXPORT_PATH, f"{scene_collection}.zip"))
 
 # Wait for user input before exiting
 wait = input("Press Enter to exit...")
