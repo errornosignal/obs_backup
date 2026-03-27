@@ -17,13 +17,13 @@ from typing import Set
 sys.path.append(os.path.expanduser("~/Secrets"))
 from obs_ws_conn_info import host as ws_host, port as ws_port, password as ws_password # type: ignore
 
+# Upper-level directory where all my OBS backups sub-dirs are stored - adjust as needed
+EXPORT_PATH_PREFIX = "D:/Users/error/OneDrive/Documents/config-backups_local/OBS/Backups"
+
 # Set to True if you want to include stream key in the export (service.json)
 INCLUDE_SENSITIVE = False
 # Storage for advanced-scene-switcher config file path
 ADVSS_SETTINGS_FILE = "" # <--- global variable
-
-# Upper-level directory where all my OBS backups sub-dirs are stored - adjust as needed
-EXPORT_PATH_PREFIX = "D:/Users/error/OneDrive/Documents/config-backups_local/OBS/Backups"
 
 # Sub-dir path building
 # Directory to export profile data
@@ -50,7 +50,7 @@ def compute_file_hash(file_path, chunk_size=65536, algorithm='sha256') -> str:
             while chunk := f.read(chunk_size):
                 sha256.update(chunk)
     except (OSError, PermissionError) as e:
-        print(f"[ERROR] Cannot read file: {file_path} ({e})")
+        print(f"[ERROR] ⚠️ Cannot read file: {file_path} ({e})")
         return None
     return sha256.hexdigest()
 
@@ -65,11 +65,13 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
     :print_summary: If True, print final statistics
     """
     if not os.path.isdir(directory):
-        print(f"[ERROR] '{directory}' is not a valid directory.")
+        print(f"[ERROR] ⚠️ '{directory}' is not a valid directory.")
         return
     
     seen_hashes = {}
     duplicates = []
+    path_and_hash = []
+    matches = []
 
     for root, _, files in os.walk(directory):
         for filename in files:
@@ -80,6 +82,8 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
                 continue
 
             file_hash = compute_file_hash(file_path)
+            path_and_hash.append({"path": file_path, "hash": file_hash})
+            
             if file_hash is None:
                 continue  # Skip unreadable files
 
@@ -88,11 +92,21 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
                 if not dry_run:
                     try:
                         os.remove(file_path)
-                        print(f"[REMOVED] Duplicate: {file_path}")
+                        matched_hash = file_hash
+                        for item in path_and_hash:
+                            if item['hash'] == matched_hash:
+                                matches.append(item['path'])                              
+                        
+                        print(f"[REMOVED] ⚠️  Duplicate: {file_path}")
+                        print(f'\twith hash: {matched_hash}')
+                        for file in matches:
+                            if file != file_path:
+                                print(f"\thash matched: {file}")
+                                
                     except (OSError, PermissionError) as e:
-                        print(f"[ERROR] Cannot delete file: {file_path} ({e})")
+                        print(f"[ERROR] ⚠️  Cannot delete file: {file_path} ({e})")
                 else:
-                    print(f"[DUPLICATE] {file_path}")
+                    print(f"[DUPLICATE] 📄 {file_path}")
             else:
                 seen_hashes[file_hash] = file_path
     if print_summary:
@@ -102,7 +116,6 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
             print("No files were deleted (dry-run mode).")
         else:
             print(f"Total duplicates removed: {len(duplicates)}")
-    
     return
     
 # Function to get current date and time as a string
@@ -118,14 +131,14 @@ def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
         # Connect to OBS WebSocket
         ws = obsws(ws_host, ws_port, ws_password)
         ws.connect()
-        print("[INFO] Connected to OBS WebSocket.")
+        print("[INFO] ✅ Connected to OBS WebSocket.")
 
         # Get current profile name
         current_profile = ws.call(requests.GetProfileList()).getcurrentProfileName()
-        print(f"[INFO] Current OBS Profile: '{current_profile}'")
+        print(f"[INFO] 📄 Current OBS Profile: '{current_profile}'")
         # Get current scene collection name
         scene_collection = ws.call(requests.GetSceneCollectionList()).getcurrentSceneCollectionName()
-        print(f"[INFO] Current OBS Scene Collection: '{scene_collection}'")
+        print(f"[INFO] 📄 Current OBS Scene Collection: '{scene_collection}'")
 
     except Exception as e:
         print(f"[ERROR] {e}")
@@ -133,9 +146,9 @@ def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
     finally:
         try:
             ws.disconnect()
-            print("[INFO] Disconnected from OBS WebSocket.")
+            print("[INFO] ⚠️  Disconnected from OBS WebSocket.")
         except Exception as e:
-            print(f"[ERROR] Failed to disconnect from OBS: {e}")
+            print(f"[ERROR] ⚠️  Failed to disconnect from OBS: {e}")
     # Return the current profile and scene collection names
     return current_profile, scene_collection
 
@@ -281,15 +294,15 @@ def update_obs_config(config_pattern: str, new_path: str) -> None:
                                                 else:
                                                     print(f"[ERROR] ❌ Failed to update 'lastImportPath' in '{matching_files}'")
                                         else:
-                                            print(f"[ERROR] ❌ Expected a dictionary at index '{index3}' \n\t in '{matching_files}', but got {type(item3).__name__}")
+                                            print(f"[ERROR] ⚠️  Expected a dictionary at index '{index3}' \n\t in '{matching_files}', but got {type(item3).__name__}")
                                     if hard_break:  
                                         break  # Exit the second loop if the update was successful
                             else:
-                                print(f"[ERROR] ❌ Expected a dictionary at index ['{index2}'] \n\t in '{matching_files}', but got {type(item2).__name__}")    
+                                print(f"[ERROR] ⚠️  Expected a dictionary at index ['{index2}'] \n\t in '{matching_files}', but got {type(item2).__name__}")    
                         if hard_break:  
                             break  # Exit the outer loop if the update was successful
                 else:
-                    print(f"[ERROR] ❌ Expected a dictionary at index '{index1}' \n\t in '{matching_files}', but got {type(item1).__name__}")
+                    print(f"[ERROR] ⚠️  Expected a dictionary at index '{index1}' \n\t in '{matching_files}', but got {type(item1).__name__}")
             # Write the updated JSON back to the file
             with open(matching_files, "w", encoding="utf8") as file:
                 json.dump(data, file, indent=4)
@@ -346,11 +359,11 @@ def get_advss_most_recent_settings_file() -> str:
                 if os.path.isfile(full_path) and substring_to_find.search(entry):
                     matches.append(entry)
         except PermissionError as e:
-            print(f"[ERROR] Permission denied while accessing {advss_plugin_config_dir}: {e}")
+            print(f"[ERROR] ⚠️  Permission denied while accessing {advss_plugin_config_dir}: {e}")
 
         # If no matching config files are found, print an error message and exit the function
         if not matches:
-            print(f"[ERROR] No config files matching the pattern were found in \n\t {advss_plugin_config_dir}")
+            print(f"[ERROR] ⚠️  No config files matching the pattern were found in \n\t {advss_plugin_config_dir}")
             return
         # If matching config files are found, get the most recent one and set the global variable to its path for use in the export function
         global ADVSS_SETTINGS_FILE # <--- global variable
