@@ -135,7 +135,7 @@ def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
         # Connect to OBS WebSocket
         ws = obsws(ws_host, ws_port, ws_password)
         ws.connect()
-        print("[SUCESS] ✅ Connected to OBS WebSocket.")
+        print("[SUCCESS] ✅ Connected to OBS WebSocket.")
 
         # Get current profile name
         current_profile = ws.call(requests.GetProfileList()).getcurrentProfileName()
@@ -292,7 +292,7 @@ def update_obs_config(config_pattern: str, new_path: str) -> None:
                                                     # Set a flag to break out of the outer loops after updating
                                                     hard_break = True
                                                     # print success message with the file name and the new path
-                                                    print(f"[INFO] ✅ Updated 'lastImportPath' in '{matching_files}'\n\t to '{new_path}'")
+                                                    print(f"[SUCCESS] ✅ Updated 'lastImportPath' in '{matching_files}'\n\t to '{new_path}'")
                                                     break  # Exit the innermost loop after updating
                                                 # if the value was not updated correctly, print an error message
                                                 else:
@@ -339,7 +339,7 @@ def export_advss_config(scene_collection) -> None:
     # Copy the file from source to destination with the new name
     shutil.copy2(source_file, destination_file)
 
-    print(f"[SUCESS] ✅ ADVSS settings exported to: '{destination_file}'")
+    print(f"[SUCCESS] ✅ ADVSS settings exported to: '{destination_file}'")
     
     return destination_folder, new_file_name
 
@@ -413,7 +413,7 @@ def export_scene_collection(scene_name: str, output_zip: str) -> None:
                 else:
                     print(f"[INFO] ⚠ Skipping missing file: {media}")
 
-        print(f"[SUCESS] ✅ Scene '{scene_name}' exported to '{output_zip}'")
+        print(f"[SUCCESS] ✅ Scene '{scene_name}' exported to '{output_zip}'")
         return
     except Exception as e:
         print(f"[ERROR] ❌ Failed to export scene collection: {e}")
