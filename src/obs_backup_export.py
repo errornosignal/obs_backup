@@ -38,7 +38,7 @@ PLUGIN_PATH_PREFIX = os.path.expanduser("~/AppData/Roaming/obs-studio/plugin_con
 # Directory where advanced-scene-switcher plugin config files are stored
 ADVSS_PLUGIN_CONFIG_DIR = os.path.join(PLUGIN_PATH_PREFIX, "advanced-scene-switcher")
 
-# Funtion to compute the hash of a file
+# Funtion to compute the hash of a file #TODO: Add comments
 def compute_file_hash(file_path, chunk_size=65536, algorithm='sha256') -> str:
     """
     Compute SHA-256 hash of a file in chunks to handle large files efficiently.
@@ -54,7 +54,7 @@ def compute_file_hash(file_path, chunk_size=65536, algorithm='sha256') -> str:
         return None
     return sha256.hexdigest()
 
-# Function to remove files with duplicate hashes in a directory
+# Function to remove files with duplicate hashes in a directory #TODO: Add comments
 def de_dup(directory, dry_run=False, print_summary=False) -> None:
     """
     Scan the directory recursively, compute hashes, and remove duplicate files.
