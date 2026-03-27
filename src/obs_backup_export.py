@@ -17,6 +17,18 @@ from typing import Set
 sys.path.append(os.path.expanduser("~/Secrets"))
 from obs_ws_conn_info import host as ws_host, port as ws_port, password as ws_password # type: ignore
 
+# Get name of self
+this_script = Path(__file__).name
+
+# formatted log icons
+double_space   =  " "
+SUCCESS   = f"✅"
+INFO      = f"ℹ️"
+WARN      = f"⚠️"
+ERROR     = f"❗"
+CRITICAL  = f"❌"
+STEP_INTO = f"↪️"
+
 # Upper-level directory where all my OBS backups sub-dirs are stored - adjust as needed
 EXPORT_PATH_PREFIX = "D:/Users/error/OneDrive/Documents/config-backups_local/OBS/Backups"
 
@@ -50,7 +62,7 @@ def compute_file_hash(file_path, chunk_size=65536, algorithm='sha256') -> str:
             while chunk := f.read(chunk_size):
                 sha256.update(chunk)
     except (OSError, PermissionError) as e:
-        print(f"[ERROR] ❗ Cannot read file: {file_path} ({e})")
+        print(f"{ERROR} Cannot read file: {file_path} ({e})")
         return None
     return sha256.hexdigest()
 
@@ -65,7 +77,7 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
     :print_summary: If True, print final statistics
     """
     if not os.path.isdir(directory):
-        print(f"[ERROR] ❗ '{directory}' is not a valid directory.")
+        print(f"{ERROR} '{directory}' is not a valid directory.")
         return
     
     seen_hashes = {}
@@ -97,16 +109,16 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
                             if item['hash'] == matched_hash:
                                 matches.append(item['path'])                              
                         
-                        print(f"[WARN] ⚠️ 📄 File found with duplicate hash: {file_path}")
+                        print(f"{WARN} File found with duplicate hash: {file_path}")
                         print(f'\t- hash: {matched_hash}')
                         for file in matches:
                             if file != file_path:
                                 print(f"\t- file matched: {file}")
                                 
                     except (OSError, PermissionError) as e:
-                        print(f"[ERROR] ❗ Cannot delete file: {file_path} ({e})")
+                        print(f"{ERROR} Cannot delete file: {file_path} ({e})")
                 else:
-                    print(f"[WARN] ⚠️ 📄 File found with duplicate hash: {file_path}")
+                    print(f"{WARN} File found with duplicate hash: {file_path}")
                     print(f'\t- hash: {matched_hash}')
                     for file in matches:
                         if file != file_path:
@@ -121,6 +133,14 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
         else:
             print(f"Total duplicates removed: {len(duplicates)}")
     return
+
+def zip_files(zip_file_path, dir_to_zip):
+    with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, _, files in os.walk(dir_to_zip):
+            for file in files:
+                file_path = Path(root) / file
+                zipf.write(file_path, file_path.relative_to(dir_to_zip))
+    
     
 # Function to get current date and time as a string
 def get_date_time_string() -> str:
@@ -135,24 +155,24 @@ def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
         # Connect to OBS WebSocket
         ws = obsws(ws_host, ws_port, ws_password)
         ws.connect()
-        print("[SUCCESS] ✅ Connected to OBS WebSocket.")
+        print(f"{SUCCESS} Connected to OBS WebSocket.")
 
         # Get current profile name
         current_profile = ws.call(requests.GetProfileList()).getcurrentProfileName()
-        print(f"[INFO] 📄 Current OBS Profile: '{current_profile}'")
+        print(f"{INFO} Current OBS Profile: '{current_profile}'")
         # Get current scene collection name
         scene_collection = ws.call(requests.GetSceneCollectionList()).getcurrentSceneCollectionName()
-        print(f"[INFO] 📄 Current OBS Scene Collection: '{scene_collection}'")
+        print(f"{INFO} Current OBS Scene Collection: '{scene_collection}'")
 
     except Exception as e:
-        print(f"[ERROR] ❗ {e}")
+        print(f"{ERROR} {e}")
     # Ensure we disconnect from OBS WebSocket even if an error occurs
     finally:
         try:
             ws.disconnect()
-            print("[WARN] ⚠️  Disconnected from OBS WebSocket.")
+            print(f"{WARN} Disconnected from OBS WebSocket.")
         except Exception as e:
-            print(f"[ERROR] ❗ Failed to disconnect from OBS: {e}")
+            print(f"{ERROR} Failed to disconnect from OBS: {e}")
     # Return the current profile and scene collection names
     return current_profile, scene_collection
 
@@ -232,22 +252,19 @@ def export_obs_profile(profile_name, export_path, include_sensitive=False) -> No
             if sensitive_file.exists():
                 sensitive_file.unlink()
 
-        # Create ZIP file
+        # Create ZIP file from temp dir
         zip_file_path = Path(export_path)
-        with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for root, _, files in os.walk(temp_dir):
-                for file in files:
-                    file_path = Path(root) / file
-                    zipf.write(file_path, file_path.relative_to(temp_dir))
+        zip_files(zip_file_path, temp_dir)
+        
         if os.path.isfile(zip_file_path):
-            print(f"[SUCCESS] ✅ Profile '{profile_name}' exported to '{zip_file_path}'")
+            print(f"{SUCCESS} Profile '{profile_name}' exported to '{zip_file_path}'")
 
         # Clean up temp folder
         shutil.rmtree(temp_dir)
 
         return
     except Exception as e:  
-        print(f"[ERROR] ❌ Failed to export profile: {e}")
+        print(f"{CRITICAL} Failed to export profile: {e}")
 
 # Function to update OBS Scene file config with the most recent Advanced Scene Switcher export path 
 def update_obs_config(config_pattern: str, new_path: str) -> None:
@@ -292,21 +309,21 @@ def update_obs_config(config_pattern: str, new_path: str) -> None:
                                                     # Set a flag to break out of the outer loops after updating
                                                     hard_break = True
                                                     # print success message with the file name and the new path
-                                                    print(f"[SUCCESS] ✅ Updated 'lastImportPath' in '{matching_files}'\n\t to '{new_path}'")
+                                                    print(f"{SUCCESS} Updated 'lastImportPath' in '{matching_files}'\n\t to '{new_path}'")
                                                     break  # Exit the innermost loop after updating
                                                 # if the value was not updated correctly, print an error message
                                                 else:
-                                                    print(f"[ERROR] ❌ Failed to update 'lastImportPath' in '{matching_files}'")
+                                                    print(f"{CRITICAL} Failed to update 'lastImportPath' in '{matching_files}'")
                                         else:
-                                            print(f"[ERROR] ❗ Expected a dictionary at index '{index3}' \n\t in '{matching_files}', but got {type(item3).__name__}")
+                                            print(f"{ERROR} Expected a dictionary at index '{index3}' \n\t in '{matching_files}', but got {type(item3).__name__}")
                                     if hard_break:  
                                         break  # Exit the second loop if the update was successful
                             else:
-                                print(f"[ERROR] ❗ Expected a dictionary at index ['{index2}'] \n\t in '{matching_files}', but got {type(item2).__name__}")    
+                                print(f"{ERROR} Expected a dictionary at index ['{index2}'] \n\t in '{matching_files}', but got {type(item2).__name__}")    
                         if hard_break:  
                             break  # Exit the outer loop if the update was successful
                 else:
-                    print(f"[ERROR] ❗ Expected a dictionary at index '{index1}' \n\t in '{matching_files}', but got {type(item1).__name__}")
+                    print(f"{ERROR} Expected a dictionary at index '{index1}' \n\t in '{matching_files}', but got {type(item1).__name__}")
             # Write the updated JSON back to the file
             with open(matching_files, "w", encoding="utf8") as file:
                 json.dump(data, file, indent=4)
@@ -339,7 +356,7 @@ def export_advss_config(scene_collection) -> None:
     # Copy the file from source to destination with the new name
     shutil.copy2(source_file, destination_file)
 
-    print(f"[SUCCESS] ✅ ADVSS settings exported to: '{destination_file}'")
+    print(f"{SUCCESS} ADVSS settings exported to: '{destination_file}'")
     
     return destination_folder, new_file_name
 
@@ -363,11 +380,11 @@ def get_advss_most_recent_settings_file() -> str:
                 if os.path.isfile(full_path) and substring_to_find.search(entry):
                     matches.append(entry)
         except PermissionError as e:
-            print(f"[ERROR] ❗ Permission denied while accessing {advss_plugin_config_dir}: {e}")
+            print(f"{ERROR} Permission denied while accessing {advss_plugin_config_dir}: {e}")
 
         # If no matching config files are found, print an error message and exit the function
         if not matches:
-            print(f"[ERROR] ❗ No config files matching the pattern were found in \n\t {advss_plugin_config_dir}")
+            print(f"{ERROR} No config files matching the pattern were found in \n\t {advss_plugin_config_dir}")
             return
         # If matching config files are found, get the most recent one and set the global variable to its path for use in the export function
         global ADVSS_SETTINGS_FILE # <--- global variable
@@ -401,22 +418,40 @@ def export_scene_collection(scene_name: str, output_zip: str) -> None:
     try:
         scene_file = find_scene_file(scene_name)
         media_files = extract_media_paths(scene_file)
-
+        updated_list = []
+        skipped_files = []
+    
         with zipfile.ZipFile(output_zip, "w", zipfile.ZIP_DEFLATED) as zipf:
             # Add the scene JSON
             zipf.write(scene_file, arcname=scene_file.name)
 
             # Add all media files
             for media in media_files:
-                if media.exists():
+                # check if media exists and only include it in the zip if it has a valid extension
+                if media.exists() and media.suffix and media.name != this_script:
+                    updated_list.append(media)
                     zipf.write(media, arcname=f"assets/{media.name}")
                 else:
-                    print(f"[INFO] ⚠ Skipping missing file: {media}")
+                    skipped_files.append(media)
 
-        print(f"[SUCCESS] ✅ Scene '{scene_name}' exported to '{output_zip}'")
+        print(f"{SUCCESS} Scene collection and assets '{scene_name}' exported to '{output_zip}'")
+        print(f"{SUCCESS} Assets exported to '{output_zip}'")
+        
+        print(f"\t{WARN} Skipped file(s):")
+        for skip in skipped_files:
+            #self identify
+            admit_self = ""
+            if this_script == Path(skip).name:
+                admit_self = " (this script)"
+                
+            print(f"\t   - {skip}{admit_self}")
+        
+        print(f"\t{STEP_INTO}Exported asset(s):")
+        for asset in updated_list:
+            print(f"\t   - {asset}")
         return
     except Exception as e:
-        print(f"[ERROR] ❌ Failed to export scene collection: {e}")
+        print(f"{CRITICAL} Failed to export scene collection: {e}")
 
 if __name__ == "__main__":
     # Get current profile and scene collection from OBS
@@ -440,6 +475,6 @@ if __name__ == "__main__":
     # Export scene collection with assets if found, otherwise skip
     if scene_collection:
         export_scene_collection(scene_collection, os.path.join(SCENE_COLLECTION_EXPORT_PATH, f"{scene_collection}.zip"))
-
+        
 # Wait for user input before exiting
 wait = input("Press Enter to exit...")
