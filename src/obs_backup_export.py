@@ -97,7 +97,7 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
                             if item['hash'] == matched_hash:
                                 matches.append(item['path'])                              
                         
-                        print(f"[WARN] ❗ File found with duplicate hash: {file_path}")
+                        print(f"[WARN] ⚠️ 📄 File found with duplicate hash: {file_path}")
                         print(f'\t- hash: {matched_hash}')
                         for file in matches:
                             if file != file_path:
@@ -135,7 +135,7 @@ def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
         # Connect to OBS WebSocket
         ws = obsws(ws_host, ws_port, ws_password)
         ws.connect()
-        print("[INFO] ✅ Connected to OBS WebSocket.")
+        print("[SUCESS] ✅ Connected to OBS WebSocket.")
 
         # Get current profile name
         current_profile = ws.call(requests.GetProfileList()).getcurrentProfileName()
@@ -145,12 +145,12 @@ def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
         print(f"[INFO] 📄 Current OBS Scene Collection: '{scene_collection}'")
 
     except Exception as e:
-        print(f"[ERROR] {e}")
+        print(f"[ERROR] ❗ {e}")
     # Ensure we disconnect from OBS WebSocket even if an error occurs
     finally:
         try:
             ws.disconnect()
-            print("[INFO] ⚠️  Disconnected from OBS WebSocket.")
+            print("[WARN] ⚠️  Disconnected from OBS WebSocket.")
         except Exception as e:
             print(f"[ERROR] ❗ Failed to disconnect from OBS: {e}")
     # Return the current profile and scene collection names
@@ -240,7 +240,7 @@ def export_obs_profile(profile_name, export_path, include_sensitive=False) -> No
                     file_path = Path(root) / file
                     zipf.write(file_path, file_path.relative_to(temp_dir))
         if os.path.isfile(zip_file_path):
-            print(f"[INFO] ✅ Profile '{profile_name}' exported to '{zip_file_path}'")
+            print(f"[SUCCESS] ✅ Profile '{profile_name}' exported to '{zip_file_path}'")
 
         # Clean up temp folder
         shutil.rmtree(temp_dir)
@@ -339,7 +339,7 @@ def export_advss_config(scene_collection) -> None:
     # Copy the file from source to destination with the new name
     shutil.copy2(source_file, destination_file)
 
-    print(f"[INFO] ✅ ADVSS settings exported to: '{destination_file}'")
+    print(f"[SUCESS] ✅ ADVSS settings exported to: '{destination_file}'")
     
     return destination_folder, new_file_name
 
@@ -390,7 +390,6 @@ def get_most_recent_file(directory: str, matches: list) -> str:
             raise FileNotFoundError(f"No files found in directory: {directory}")
         # Sort by modification time (latest first)
         latest_file = max(files, key=lambda f: f.stat().st_mtime)
-        #print(f"[INFO] Most recent file in '{directory}': {latest_file}")
         return str(latest_file.resolve())
     except Exception as e:
         raise RuntimeError(f"Error finding most recent file: {e}")  
@@ -414,7 +413,7 @@ def export_scene_collection(scene_name: str, output_zip: str) -> None:
                 else:
                     print(f"[INFO] ⚠ Skipping missing file: {media}")
 
-        print(f"[INFO] ✅ Scene '{scene_name}' exported to '{output_zip}'")
+        print(f"[SUCESS] ✅ Scene '{scene_name}' exported to '{output_zip}'")
         return
     except Exception as e:
         print(f"[ERROR] ❌ Failed to export scene collection: {e}")
