@@ -97,16 +97,20 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
                             if item['hash'] == matched_hash:
                                 matches.append(item['path'])                              
                         
-                        print(f"[REMOVED] ⚠️  Duplicate: {file_path}")
-                        print(f'\twith hash: {matched_hash}')
+                        print(f"[WARN] ❗ File found with duplicate hash: {file_path}")
+                        print(f'\t- hash: {matched_hash}')
                         for file in matches:
                             if file != file_path:
-                                print(f"\thash matched: {file}")
+                                print(f"\t- file matched: {file}")
                                 
                     except (OSError, PermissionError) as e:
                         print(f"[ERROR] ⚠️  Cannot delete file: {file_path} ({e})")
                 else:
-                    print(f"[DUPLICATE] 📄 {file_path}")
+                    print(f"[WARN] ❗📄 File found with duplicate hash: {file_path}")
+                    print(f'\t- hash: {matched_hash}')
+                    for file in matches:
+                        if file != file_path:
+                            print(f"\t- file matched: {file}")
             else:
                 seen_hashes[file_hash] = file_path
     if print_summary:
@@ -146,7 +150,7 @@ def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
     finally:
         try:
             ws.disconnect()
-            print("[INFO] ⚠️  Disconnected from OBS WebSocket.")
+            print("[INFO] ❗ Disconnected from OBS WebSocket.")
         except Exception as e:
             print(f"[ERROR] ⚠️  Failed to disconnect from OBS: {e}")
     # Return the current profile and scene collection names
