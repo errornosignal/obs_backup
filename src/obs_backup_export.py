@@ -50,7 +50,7 @@ def compute_file_hash(file_path, chunk_size=65536, algorithm='sha256') -> str:
             while chunk := f.read(chunk_size):
                 sha256.update(chunk)
     except (OSError, PermissionError) as e:
-        print(f"[ERROR] ⚠️ Cannot read file: {file_path} ({e})")
+        print(f"[ERROR] ❗ Cannot read file: {file_path} ({e})")
         return None
     return sha256.hexdigest()
 
@@ -65,7 +65,7 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
     :print_summary: If True, print final statistics
     """
     if not os.path.isdir(directory):
-        print(f"[ERROR] ⚠️ '{directory}' is not a valid directory.")
+        print(f"[ERROR] ❗ '{directory}' is not a valid directory.")
         return
     
     seen_hashes = {}
@@ -104,9 +104,9 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
                                 print(f"\t- file matched: {file}")
                                 
                     except (OSError, PermissionError) as e:
-                        print(f"[ERROR] ⚠️  Cannot delete file: {file_path} ({e})")
+                        print(f"[ERROR] ❗ Cannot delete file: {file_path} ({e})")
                 else:
-                    print(f"[WARN] ❗📄 File found with duplicate hash: {file_path}")
+                    print(f"[WARN] ⚠️ 📄 File found with duplicate hash: {file_path}")
                     print(f'\t- hash: {matched_hash}')
                     for file in matches:
                         if file != file_path:
@@ -150,9 +150,9 @@ def obs_websocket_get_current_profile_and_scene_collection() -> tuple[str, str]:
     finally:
         try:
             ws.disconnect()
-            print("[INFO] ❗ Disconnected from OBS WebSocket.")
+            print("[INFO] ⚠️  Disconnected from OBS WebSocket.")
         except Exception as e:
-            print(f"[ERROR] ⚠️  Failed to disconnect from OBS: {e}")
+            print(f"[ERROR] ❗ Failed to disconnect from OBS: {e}")
     # Return the current profile and scene collection names
     return current_profile, scene_collection
 
@@ -298,15 +298,15 @@ def update_obs_config(config_pattern: str, new_path: str) -> None:
                                                 else:
                                                     print(f"[ERROR] ❌ Failed to update 'lastImportPath' in '{matching_files}'")
                                         else:
-                                            print(f"[ERROR] ⚠️  Expected a dictionary at index '{index3}' \n\t in '{matching_files}', but got {type(item3).__name__}")
+                                            print(f"[ERROR] ❗ Expected a dictionary at index '{index3}' \n\t in '{matching_files}', but got {type(item3).__name__}")
                                     if hard_break:  
                                         break  # Exit the second loop if the update was successful
                             else:
-                                print(f"[ERROR] ⚠️  Expected a dictionary at index ['{index2}'] \n\t in '{matching_files}', but got {type(item2).__name__}")    
+                                print(f"[ERROR] ❗ Expected a dictionary at index ['{index2}'] \n\t in '{matching_files}', but got {type(item2).__name__}")    
                         if hard_break:  
                             break  # Exit the outer loop if the update was successful
                 else:
-                    print(f"[ERROR] ⚠️  Expected a dictionary at index '{index1}' \n\t in '{matching_files}', but got {type(item1).__name__}")
+                    print(f"[ERROR] ❗ Expected a dictionary at index '{index1}' \n\t in '{matching_files}', but got {type(item1).__name__}")
             # Write the updated JSON back to the file
             with open(matching_files, "w", encoding="utf8") as file:
                 json.dump(data, file, indent=4)
@@ -363,11 +363,11 @@ def get_advss_most_recent_settings_file() -> str:
                 if os.path.isfile(full_path) and substring_to_find.search(entry):
                     matches.append(entry)
         except PermissionError as e:
-            print(f"[ERROR] ⚠️  Permission denied while accessing {advss_plugin_config_dir}: {e}")
+            print(f"[ERROR] ❗ Permission denied while accessing {advss_plugin_config_dir}: {e}")
 
         # If no matching config files are found, print an error message and exit the function
         if not matches:
-            print(f"[ERROR] ⚠️  No config files matching the pattern were found in \n\t {advss_plugin_config_dir}")
+            print(f"[ERROR] ❗ No config files matching the pattern were found in \n\t {advss_plugin_config_dir}")
             return
         # If matching config files are found, get the most recent one and set the global variable to its path for use in the export function
         global ADVSS_SETTINGS_FILE # <--- global variable
