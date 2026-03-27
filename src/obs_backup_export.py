@@ -447,7 +447,7 @@ def export_scene_collection(scene_name: str, output_zip: str) -> None:
                 
             print(f"\t   - {skip}{admit_self}")
         
-        print(f"\t{STEP_INTO}Exported asset(s):")
+        print(f"\t{STEP_INTO} Exported asset(s):")
         for asset in updated_list:
             print(f"\t   - {asset}")
         return
