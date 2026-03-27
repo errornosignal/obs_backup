@@ -134,6 +134,7 @@ def de_dup(directory, dry_run=False, print_summary=False) -> None:
             print(f"Total duplicates removed: {len(duplicates)}")
     return
 
+# Function to zip all files within a directory #TODO: Add comments
 def zip_files(zip_file_path, dir_to_zip):
     with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(dir_to_zip):
@@ -142,7 +143,7 @@ def zip_files(zip_file_path, dir_to_zip):
                 zipf.write(file_path, file_path.relative_to(dir_to_zip))
     
     
-# Function to get current date and time as a string
+# Function to get current date and time as a string #TODO: Add comments
 def get_date_time_string() -> str:
     """Return a string with the current date and time in the format YYYY.MM.DD.HH.MM.SS."""
     now = datetime.now()
@@ -200,7 +201,7 @@ def find_scene_file(scene_name: str) -> Path:
         raise FileNotFoundError(f"Scene collection '{scene_name}' not found in {config_path}")
     return scene_file
 
-# Function to extract media file paths from scene JSON
+# Function to extract media file paths from scene JSON #TODO: Add comments
 def extract_media_paths(scene_json_path: Path) -> Set[Path]:
     """Extract all media file paths from the scene JSON."""
     # Recursively search through the scene JSON for any string values that are valid file paths and return a set of unique media file paths
@@ -395,7 +396,7 @@ def get_advss_most_recent_settings_file() -> str:
     
         return most_recent_file
 
-# Function to get the most recently modified file in a directory and return its path, filtering by a list of matches
+# Function to get the most recently modified file in a directory and return its path, filtering by a list of matches #TODO: Add comments
 def get_most_recent_file(directory: str, matches: list) -> str:
     """Return the most recently modified file in the given directory."""
     try:
@@ -411,7 +412,7 @@ def get_most_recent_file(directory: str, matches: list) -> str:
     except Exception as e:
         raise RuntimeError(f"Error finding most recent file: {e}")  
 
-# Function to export scene collection and all assets to a ZIP file
+# Function to export scene collection and all assets to a ZIP file #TODO: Add comments
 def export_scene_collection(scene_name: str, output_zip: str) -> None:
     """Export the scene collection and all assets into a ZIP file."""
     # Get the scene collection file and extract media paths, then create ZIP
